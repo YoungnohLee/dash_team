@@ -185,25 +185,87 @@ class churn_prediction:
 # 대시보드 시각화 -> 진행중
 class dh_visualization:
     
-    def __init__(self):
-        pass
     
-    # db에 저장된 result table을 가져오기
-    def get_result_table(self):
+    # # db에 저장된 result table을 가져오기
+    # def get_result_table(self):
         
-        self.result_table = db.making_dataframe_our_db("chrun_prediction_table")
+    #     self.result_table = db.making_dataframe_our_db("chrun_prediction_table")
         
     ## 대시보드에 출력할 정보와 그래프 만들기
-    def caculate_churned_ratio(self, threshold = 0.5):
+    def caculate_churned_ratio(self, df, threshold = 0.5):
         
-        self.threshold = threshold
-        self.total_customer = self.result_table.index.nunique()
-        self.is_churned = (self.result_table["예측 이탈률"] >= self.threshold).astype(int)
-        self.churned_customer = self.is_churned.index.nunique()
-        self.churned_ratio = round(((self.churned_customer / self.total_customer) * 100), 2)
+        self.result_table = df
+        total_customer = len(self.result_table)
+        churned_customer = (self.result_table["예측 이탈률"] >= self.threshold).sum()
+        churned_ratio = round(((churned_customer / total_customer) * 100), 1)
+        
+        return {
+            
+            "total_customer": self.total_customer,
+            "churned_customer": self.churned_customer,
+            "churned_ratio": self.churned_ratio
+            
+            }
         
     def plot_gender_ratio(self):
         
-        total_gender_count = self.result_table["성별"].value_counts().reset_index()
-        gender_pie_chart = px.pie(total_gender_count)
+        gender_summary = self.result_table["성별"].value_counts().reset_index()
+        fig = px.pie(gender_summary, names = "성별", values = "count", hole = 0.5)
+        fig.update_layout(legend_title = "성별")
+
+        return fig
+    
+    def plot_location_ratio(self):
         
+        self.location_summary = self.result_table["지역"].value_counts().reset_index()
+        fig = px.pie(self.location_summary, names = "지역", labels = "지역", values = "count")
+        fig.update_layout(legend_title = "지역")
+        
+        return fig
+    
+    def plot_mapbox(self):
+        
+        coordinates = {
+            'Chicago': {'lat': 41.8781, 'long': -87.6298},
+            'California': {'lat': 36.7783, 'long': -119.4179},
+            'New York': {'lat': 40.7128, 'long': -74.0060},
+            'New Jersey': {'lat': 40.0583, 'long': -74.4057},
+            'Washington DC': {'lat': 38.9072, 'long': -77.0369}
+        }
+
+        self.location_summary['lat'] = self.location_summary["지역"].map(lambda x: coordinates[x]['lat'])
+        self.location_summary['long'] = self.location_summary["지역"].map(lambda x: coordinates[x]['long'])
+        fig = px.scatter_mapbox(
+            self.location_summary, lat = "lat", lon = "long", size = "count", color = "count", 
+            hover_name = "지역", labels={"count": "이탈 위험 고객 수"}, 
+            hover_data = {"lat": False, "long": False}, size_max = 40, zoom = 3,
+            color_continuous_scale = px.colors.cyclical.IceFire, 
+            mapbox_style = "carto-positron"
+            )
+        fig.update_layout(mapbox = dict(center = dict(lat = 37.0902, lon = -95.7129)))
+        fig.update_traces(hovertemplate = "<b>%{hovertext}</b><br>이탈 위험 고객 수 = %{marker.size}<extra></extra>")
+
+        return fig
+    
+    def plot_purchase_amount(self):
+        
+        fig = px.histogram(self.result_table, x = "평균 금액")
+        fig.update_yaxes(title_text = "고객 수")
+        
+        return fig
+    
+    def plot_category(self):
+        
+        category_summary = self.result_table["선호 제품군"].value_counts().reset_index()
+        fig = px.bar(category_summary, x = "선호 제품군", y = "count")
+        fig.update_yaxes(title_text = "고객 수")
+        
+        return fig
+    
+    def plot_month(self):
+        
+        month_summary = self.result_table["최다 구매 월"].value_counts().sort_index().reset_index()
+        fig = px.line(month_summary, x = "최다 구매 월", y = "count")
+        fig.update_yaxes(title_text = "고객 수")
+        
+        return fig
