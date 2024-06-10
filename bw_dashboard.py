@@ -1,20 +1,10 @@
 # %%
-pip install --upgrade nbformat
-
-# %%
-!pip install dash dash_table
-
-# %%
-!pip install wordcloud
-
-# %%
-pip install dash-bootstrap-components
-
-# %%
-pip install flask
-
-# %%
-pip install dash
+# !pip install --upgrade nbformat
+# !pip install dash dash_table
+# !pip install wordcloud
+# !pip install dash-bootstrap-components
+# !pip install flask
+# !pip install dash
 
 # %%
 import pathlib
@@ -35,6 +25,12 @@ import numpy as np
 from dash.dependencies import Output, Input, State
 from dateutil import relativedelta
 from sklearn.manifold import TSNE
+
+# %%
+import bw_database
+import bw_class
+import bw_preprocessing
+import bw_dataframe
 
 # %% [markdown]
 # # 내 데이터
@@ -73,12 +69,6 @@ grouped_df = bw_database.making_dataframe_our_db('grouped_df')
 coupon_sales = bw_database.making_dataframe_our_db('coupon_sales')
 
 train_bw
-# dt = database.making_dataframe('dt')
-# joined_df = database.making_dataframe('joined_df')
-# rfm_clusters_final = database.making_dataframe('rfm_clusters_final')
-# dt.drop(columns = ['rowid'], inplace = True)
-# joined_df.drop(columns = ['rowid'], inplace = True)
-# rfm_clusters_final.drop(columns = ['rowid'], inplace = True)
 
 # %%
 dt = train_bw[['고객ID'	,'처음거래날짜'	,'마지막거래날짜'	,'거래날차이'	,'재방문여부'	,'Recency'	,'Frequency','Monetary','고객분류']]
@@ -697,17 +687,8 @@ def update_treemap(customer_type):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+if __name__ == "__main__":
+    app.run_server(port=8051)
 
 
 
