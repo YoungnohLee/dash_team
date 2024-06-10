@@ -182,46 +182,53 @@ class churn_prediction:
 # model.to_pkl()
 # model.to_result_table(X_test)
 
-# 대시보드 시각화 -> 진행중
+# 대시보드 시각화 -> 글자 폰트 같은 디자인 요소들은 다른 대시보드와 통일할 예정
 class dh_visualization:
-    
     
     # # db에 저장된 result table을 가져오기
     # def get_result_table(self):
         
     #     self.result_table = db.making_dataframe_our_db("chrun_prediction_table")
         
-    ## 대시보드에 출력할 정보와 그래프 만들기
-    def caculate_churned_ratio(self, df, threshold = 0.5):
+    def __init__(self, df):
         
         self.result_table = df
+    
+    ## 대시보드에 출력할 정보와 그래프 만들기
+    def caculate_churned_ratio(self, threshold = 0.5):
+        
+        # self.result_table = df
         total_customer = len(self.result_table)
-        churned_customer = (self.result_table["예측 이탈률"] >= self.threshold).sum()
+        churned_customer = (self.result_table["예측 이탈률"] >= threshold).sum()
         churned_ratio = round(((churned_customer / total_customer) * 100), 1)
         
         return {
             
-            "total_customer": self.total_customer,
-            "churned_customer": self.churned_customer,
-            "churned_ratio": self.churned_ratio
+            "total_customer": total_customer,
+            "churned_customer": churned_customer,
+            "churned_ratio": churned_ratio
             
             }
         
     def plot_gender_ratio(self):
         
         gender_summary = self.result_table["성별"].value_counts().reset_index()
-        fig = px.pie(gender_summary, names = "성별", values = "count", hole = 0.5)
-        fig.update_layout(legend_title = "성별")
+        gender_pie_plot = px.pie(gender_summary, names = "성별", 
+                                 values = "count", hole = 0.5)
+        gender_pie_plot.update_layout(legend_title = "성별")
+        gender_pie_plot.update_traces(hovertemplate = "<b>%{label}</b><br>고객 수: %{value}<extra></extra>")
 
-        return fig
+        return gender_pie_plot
     
     def plot_location_ratio(self):
         
         self.location_summary = self.result_table["지역"].value_counts().reset_index()
-        fig = px.pie(self.location_summary, names = "지역", labels = "지역", values = "count")
-        fig.update_layout(legend_title = "지역")
+        location_pie_plot = px.pie(self.location_summary, names = "지역", 
+                                   labels = "지역", values = "count")
+        location_pie_plot.update_layout(legend_title = "지역")
+        location_pie_plot.update_traces(hovertemplate = "<b>%{label}</b><br>고객 수: %{value}<extra></extra>")
         
-        return fig
+        return location_pie_plot
     
     def plot_mapbox(self):
         
@@ -235,37 +242,43 @@ class dh_visualization:
 
         self.location_summary['lat'] = self.location_summary["지역"].map(lambda x: coordinates[x]['lat'])
         self.location_summary['long'] = self.location_summary["지역"].map(lambda x: coordinates[x]['long'])
-        fig = px.scatter_mapbox(
+        mapbox = px.scatter_mapbox(
             self.location_summary, lat = "lat", lon = "long", size = "count", color = "count", 
             hover_name = "지역", labels={"count": "이탈 위험 고객 수"}, 
             hover_data = {"lat": False, "long": False}, size_max = 40, zoom = 3,
             color_continuous_scale = px.colors.cyclical.IceFire, 
             mapbox_style = "carto-positron"
             )
-        fig.update_layout(mapbox = dict(center = dict(lat = 37.0902, lon = -95.7129)))
-        fig.update_traces(hovertemplate = "<b>%{hovertext}</b><br>이탈 위험 고객 수 = %{marker.size}<extra></extra>")
+        mapbox.update_layout(mapbox = dict(center = dict(lat = 37.0902, lon = -95.7129)))
+        mapbox.update_traces(hovertemplate = "<b>%{hovertext}</b><br>이탈 위험 고객 수 : %{marker.size}<extra></extra>")
 
-        return fig
+        return mapbox
     
     def plot_purchase_amount(self):
         
-        fig = px.histogram(self.result_table, x = "평균 금액")
-        fig.update_yaxes(title_text = "고객 수")
+        hist_plot = px.histogram(self.result_table, x = "평균 금액")
+        hist_plot.update_yaxes(title_text = "고객 수")
+        hist_plot.update_traces(hovertemplate = "<b>%{x}</b><br>고객 수 : %{y}<extra></extra>")
         
-        return fig
+        return hist_plot
     
     def plot_category(self):
         
         category_summary = self.result_table["선호 제품군"].value_counts().reset_index()
-        fig = px.bar(category_summary, x = "선호 제품군", y = "count")
-        fig.update_yaxes(title_text = "고객 수")
+        bar_plot = px.bar(category_summary, x = "선호 제품군", y = "count")
+        bar_plot.update_yaxes(title_text = "고객 수")
+        bar_plot.update_traces(hovertemplate = "<b>%{x}</b><br>고객 수 : %{y}<extra></extra>")
         
-        return fig
+        return bar_plot
     
     def plot_month(self):
         
         month_summary = self.result_table["최다 구매 월"].value_counts().sort_index().reset_index()
-        fig = px.line(month_summary, x = "최다 구매 월", y = "count")
-        fig.update_yaxes(title_text = "고객 수")
+        line_plot = px.line(month_summary, x = "최다 구매 월", y = "count")
+        line_plot.update_yaxes(title_text = "고객 수")
+        line_plot.update_traces(hovertemplate = "<b>%{x}</b><br>고객 수 : %{y}<extra></extra>")
         
-        return fig
+        return line_plot
+    
+    
+    
