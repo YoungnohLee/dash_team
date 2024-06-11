@@ -4,10 +4,7 @@ from dash import Dash, html, dcc, Input, Output
 import dash_mantine_components as dmc
 import pandas as pd
 import dh_class as dc
-import database_bw
-
-# DB에서 result_table을 가져와서 업데이트하는 기능 추가 예정
-df = pd.read_csv("./result_table_test.csv") 
+import database_bw as db
 
 dash._dash_renderer._set_react_version("18.2.0")
 
@@ -146,7 +143,8 @@ app.layout = dmc.MantineProvider(
                                 {"label": "10명", "value": 10},
                                 {"label": "15명", "value": 15},
                                 {"label": "20명", "value": 20},
-                                {"label": "모두 표시", "value": len(df)}
+                                {"label": "25명", "value": 25},
+                                {"label": "30명", "value": 30}
                             ],
                             value=10,
                             clearable=False,
@@ -154,7 +152,7 @@ app.layout = dmc.MantineProvider(
                         ),
                         dmc.Table(
                             id='customer-table',
-                            data={"head": df.columns.tolist(), "body": df.head(10).values.tolist()},
+                            data={"head": [], "body": []},
                             striped=True,
                             highlightOnHover=True,
                             withTableBorder=True,
@@ -181,13 +179,14 @@ app.layout = dmc.MantineProvider(
     [Input('row-dropdown', 'value')]
 )
 def update_dashboard(num_rows):
-    if num_rows == len(df):
-        display_df = df
-    else:
-        display_df = df.head(num_rows)
 
-    viz = dc.dh_visualization(df)
+    viz = dc.dh_visualization()
     
+    if num_rows == "모두 표시":
+        display_df = viz.result_table
+    else:
+        display_df = viz.result_table.head(num_rows)
+
     total_customers = viz.caculate_churned_ratio()["total_customer"]
     churned_customers = viz.caculate_churned_ratio()["churned_customer"]
     churned_ratio = f"{viz.caculate_churned_ratio()['churned_ratio']}%"
@@ -205,4 +204,13 @@ def update_dashboard(num_rows):
 
 if __name__ == '__main__':
     app.run_server(debug=True)
+
 #  http://127.0.0.1:8050/
+
+# step 1. train.db에 데이터가 shoot_row() 함수에 의해 적재됨
+# step 2. 데이터가 적재될 때마다 check_transaction_date() 함수가 하루가 지났는지 여부 판단
+# step 3-1. 하루가 지나지 않았을 경우, 현 상태 유지
+# step 3-2. 하루가 지났을 경우, train.db에 지금까지 쌓인 데이터를 result_table로 변환하고, OUR_DATABASE의 churn_prediction_table로 업데이트
+# step 4. 대시보드 또한 업데이트한 churn_prediction_table의 정보를 반영하여 업데이트
+ 
+
