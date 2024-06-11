@@ -15,10 +15,25 @@ from waitress import serve
 
 from arppu_page import layout as arppu_layout
 
+from flask import Flask, jsonify
+import pandas as pd
+import sqlite3
+import threading
+import schedule
+import time
+
+from shoot_row import shoot_row, csv2db
+
+schedule.every(2).seconds.do(shoot_row)
+def run_shoot_row():
+    while True:
+        schedule.run_pending()
+
 
 # Create a Dash instance within the Flask app
-app = dash.Dash(server=flask_app, name="Dashboard", url_base_pathname="/dashboard/", external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.title = 'Admin Dashboard'
+app = Flask(__name__)
+dash_app = dash.Dash(server=flask_app, name="Dashboard", url_base_pathname="/dashboard/", external_stylesheets=[dbc.themes.BOOTSTRAP])
+dash_app.title = 'Admin Dashboard'
 
 # The style arguments for the sidebar. We use position:fixed and a fixed width
 SIDEBAR_STYLE = {
@@ -64,11 +79,16 @@ sidebar = html.Div(
 
 content = html.Div(id="page-content", style=CONTENT_STYLE)
 
-app.layout = html.Div([dcc.Location(id="url"), sidebar, content])
+dash_app.layout = html.Div([
+    dcc.Location(id="url"),
+    sidebar,
+    content,
+    dcc.Interval(id='interval-component', interval=2*1000, n_intervals=0)  # 2초마다 갱신
+])
 
-@app.callback(Output("page-content", "children"), [Input("url", "pathname")])
+@dash_app.callback(Output("page-content", "children"), [Input("url", "pathname"), Input('interval-component', 'n_intervals')])
 @login_required
-def render_page_content(pathname):
+def render_page_content(pathname, n_intervals):
     if pathname == "/dashboard/":
         return html.Div([
             html.P("홈페이지"),
@@ -101,7 +121,7 @@ def render_page_content(pathname):
     # )
 
 ### Add logout callback
-@app.callback(Output("redirect-login", "pathname"), [Input("url", "pathname")])
+@dash_app.callback(Output("redirect-login", "pathname"), [Input("url", "pathname")])
 def logout_on_click(pathname):
     if pathname == "/logout":
         logout_user()
@@ -127,7 +147,7 @@ tools = [
         }
     }
 ]
-@app.callback(
+@dash_app.callback(
     Output('output-container-button', 'children'),
     [Input('button', 'n_clicks')],
     [State('input-box', 'value')]
@@ -165,5 +185,9 @@ def update_output(n_clicks, input_value):
     else:
         return html.P("무엇을 도와드릴까요?")
 if __name__ == "__main__":
+    # 스케줄러를 별도의 스레드에서 실행
+    thread = threading.Thread(target=run_shoot_row)
+    thread.start()
+    
     flask_app.run(port=8888, debug=True)
     # serve(app.server, host='0.0.0.0', port=8888)

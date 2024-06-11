@@ -6,21 +6,21 @@
 # In[23]:
 
 
-import database_bw
+import bw_database
 import bw_class
 
 
 # In[24]:
 
 
-database.csv2db()
+bw_database.csv2db()
 
 
 # In[25]:
 
 
-train = database_bw.making_dataframe_train_db('train_table')
-test = database_bw.making_dataframe_test_db('test_table')
+train = bw_database.making_dataframe_train_db('train_table')
+test = bw_database.making_dataframe_test_db('test_table')
 
 
 # In[26]:
@@ -74,11 +74,11 @@ train_bw = bw_df.merge(cluster, on = '고객ID', how = 'left')
 # In[32]:
 
 
-database_bw.create_new_table(train_bw, 'train_bw')
+bw_database.create_new_table(train_bw, 'train_bw')
 
 
 # In[33]:
 
 
-train_bw = database_bw.making_dataframe_our_db('train_bw')
+train_bw = bw_database.making_dataframe_our_db('train_bw')
 
