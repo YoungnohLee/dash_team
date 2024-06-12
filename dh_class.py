@@ -289,8 +289,7 @@ class dh_visualization:
         line_plot.update_traces(hovertemplate = "<b>%{x}</b><br>고객 수 : %{y}<extra></extra>")
         
         return line_plot
-    
-    
+
 # 데이터의 '거래날짜' 컬럼을 바탕으로 날짜가 지났는지 확인하고, 지났으면 result_table을 업데이트하는 함수
 # shoot_row 함수로 데이터가 train.db에 적재될 때마다 실행되어야 함
 # 어느 파일에 넣어야 되는지 헷갈려서 일단 여기다 작성했어요. -> 테스트 필요
@@ -315,7 +314,9 @@ def check_transaction_date():
         
         # 두 거래날짜가 일치하는지(날짜가 지났는지) 확인
         if last_transaction_date == previous_transaction_date: 
-            print("아직 하루가 지나지 않았습니다.")
+            
+            # print("아직 하루가 지나지 않았습니다.")
+            return False, last_transaction_date
         
         else:
             print(f"하루가 지났습니다. 어제는 {previous_transaction_date}이고, 오늘은 {last_transaction_date}입니다")
@@ -339,5 +340,7 @@ def check_transaction_date():
             cp.to_result_table(new_X_train, save = True)
             print(f"churn_prediction_table이 {previous_transaction_date} 기준으로 업데이트 되었습니다.")
             
+            return True, last_transaction_date
+    
     finally:
         conn.close()  

@@ -18,14 +18,7 @@ app.layout = dmc.MantineProvider(
             children=[
                 html.H1("고객 이탈률 예측", style={"textAlign": "center"}),
                 html.H2("Today", style={"textAlign": "center"}),
-                html.Div(
-                    dcc.DatePickerSingle(
-                        date="2020-01-01",
-                        display_format="YYYY-MM-DD",
-                        style={"width": "50%", "margin": "auto"}
-                    ),
-                    style={"textAlign": "center", "marginBottom": "20px"}
-                ),
+                html.H2(id = "last_transaction_date", style = {"textAlign": "center"}),
                 dmc.Group(
                     gap="lg",
                     grow=True,
@@ -178,6 +171,9 @@ app.layout = dmc.MantineProvider(
      Output('customer-table', 'data')],
     [Input('row-dropdown', 'value')]
 )
+# check_transaction_date() 함수를 이용해서 자동으로 날짜 변화가 감지되면,
+# 대시보드가 업데이트되어야 되는데 로직 구현이 잘 안됩니다.
+# 그래서 수정이 필요할 것 같아요.
 def update_dashboard(num_rows):
 
     viz = dc.dh_visualization()
