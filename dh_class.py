@@ -194,10 +194,9 @@ class churn_prediction:
 # 대시보드 시각화 -> 글자 폰트 같은 디자인 요소들은 다른 대시보드와 통일할 예정
 class dh_visualization:
     
-    # db에 저장된 result table을 가져오기
-    def __init__(self):
+    def __init__(self, result_table):
         
-        self.result_table = db.making_dataframe_our_db("churn_prediction_table")
+        self.result_table = result_table
     
     ## 대시보드에 출력할 정보와 그래프 만들기
     # 전체 고객수, 이탈 위험 고객 수, 이탈 위험 고객 비율 계산
@@ -289,58 +288,3 @@ class dh_visualization:
         line_plot.update_traces(hovertemplate = "<b>%{x}</b><br>고객 수 : %{y}<extra></extra>")
         
         return line_plot
-
-# 데이터의 '거래날짜' 컬럼을 바탕으로 날짜가 지났는지 확인하고, 지났으면 result_table을 업데이트하는 함수
-# shoot_row 함수로 데이터가 train.db에 적재될 때마다 실행되어야 함
-# 어느 파일에 넣어야 되는지 헷갈려서 일단 여기다 작성했어요. -> 테스트 필요
-def check_transaction_date():
-    
-    conn = sqlite3.connect("TRAIN.DB")
-    
-    try:
-        cur = conn.cursor()
-        
-        cur.execute("SELECT MAX(IND) FROM train_table")
-        last_index = cur.fetchone()[0]
-        previous_index = last_index - 1
-        
-        # train_table에 저장된 가장 마지막 행에서 거래날짜를 가져오기
-        cur.execute(f"SELECT 거래날짜 FROM train_table WHERE IND = {last_index}")
-        last_transaction_date = cur.fetchone()[0]
-        
-        # train_table에 저장된 가장 마지막 행에서 거래날짜를 가져오기
-        cur.execute(f"SELECT 거래날짜 FROM train_table WHERE IND = {previous_index}")
-        previous_transaction_date = cur.fetchone()[0]
-        
-        # 두 거래날짜가 일치하는지(날짜가 지났는지) 확인
-        if last_transaction_date == previous_transaction_date: 
-            
-            # print("아직 하루가 지나지 않았습니다.")
-            return False, last_transaction_date
-        
-        else:
-            print(f"하루가 지났습니다. 어제는 {previous_transaction_date}이고, 오늘은 {last_transaction_date}입니다")
-            
-            # train_db에서 previous_transaction_date까지 적재된 데이터 가져오기
-            new_train = db.making_dataframe_train_db("train_table").iloc[:-1]
-            
-            # new_train을 이미 학습된 모델에 넣고 이탈률을 예측할 수 있도록 변환(X만 필요)
-            prep = dh_class.dh_preprocessing(new_train)
-            prep.apply_my_function()
-            new_X_train, _ = prep.return_X_y()
-            
-            # 저장된 파이프라인 불러오기
-            pipe = pkl.load(open("dh_pipeline.pkl", "rb"))
-
-            # new_X_train을 파이프라인을 이용하여 이탈률 예측
-            cp = dh_class.churn_prediction()
-            new_predict = cp.predict_churn_rate(new_X_train, pipe)
-            
-            # new_X_train과 new_predict를 result_table로 변환 후 our_database.db에 저장
-            cp.to_result_table(new_X_train, save = True)
-            print(f"churn_prediction_table이 {previous_transaction_date} 기준으로 업데이트 되었습니다.")
-            
-            return True, last_transaction_date
-    
-    finally:
-        conn.close()  
