@@ -5,12 +5,11 @@ import dash_mantine_components as dmc
 import pandas as pd
 import dh_class as dc
 import database_bw as db
+from app import app
 
 dash._dash_renderer._set_react_version("18.2.0")
 
-app = dash.Dash(__name__)
-
-app.layout = dmc.MantineProvider(
+layout = dmc.MantineProvider(
     children=[
         dmc.Container(
             fluid=True,
@@ -198,8 +197,7 @@ def update_dashboard(num_rows):
 
     return total_customers, churned_customers, churned_ratio, gender_pie_chart, location_pie_chart, mapbox_chart, purchase_amount_chart, category_chart, month_chart, table_data
 
-if __name__ == '__main__':
-    app.run_server(debug=True)
+
 
 #  http://127.0.0.1:8050/
 

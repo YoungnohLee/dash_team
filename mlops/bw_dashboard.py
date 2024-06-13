@@ -7,6 +7,7 @@
 # !pip install dash
 
 # %%
+from app import app
 import pathlib
 import re
 import json
@@ -518,10 +519,10 @@ BODY = dbc.Container(
 )
 
 # %%
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-server = app.server  # for Heroku deployment
+# app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+# server = app.server  # for Heroku deployment
 
-app.layout = html.Div(children=[NAVBAR, BODY])
+layout = html.Div(children=[NAVBAR, BODY])
 
 
 @app.callback(
@@ -682,13 +683,6 @@ def update_treemap(customer_type):
         legend=dict(bgcolor='rgba(0,0,0,0)', bordercolor="gray", borderwidth=1)
     )
     return fig
-
-
-
-
-
-if __name__ == "__main__":
-    app.run_server(port=8051)
 
 
 

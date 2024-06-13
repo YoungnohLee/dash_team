@@ -14,6 +14,9 @@ import json
 from waitress import serve
 
 from arppu_page import layout as arppu_layout
+from bw_dashboard import layout as bw_layout
+from sy_dashboard import layout as sy_layout
+from churn_prediction_page import layout as dh_layout
 
 from flask import Flask, jsonify
 import pandas as pd
@@ -100,13 +103,13 @@ def render_page_content(pathname, n_intervals):
             ])
         ])
     elif pathname == "/dashboard/page-1":
-        return html.P("페이지 1")
+        return dh_layout
     elif pathname == "/dashboard/page-2":
-        return html.P("페이지 2")
+        return bw_layout
     elif pathname == "/dashboard/page-3":
         return html.P("페이지 3")
     elif pathname == "/dashboard/page-4":
-        return html.P("페이지 4")
+        return sy_layout
     elif pathname == "/dashboard/page-5":
         return arppu_layout
     return dcc.Location(pathname="/login", id="redirect-login")
