@@ -560,6 +560,3 @@ class fifth_dash:
 
 # coupon_sales = coupon_sales_processor.get_coupon_sales()
 # coupon_sales
-
-
-

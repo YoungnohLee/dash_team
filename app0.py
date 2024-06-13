@@ -14,20 +14,23 @@ import json
 from waitress import serve
 
 from arppu_page import layout as arppu_layout
+from churn_prediction_page2 import layout as churn_layout
 
 from flask import Flask, jsonify
 import pandas as pd
 import sqlite3
 import threading
-import schedule
+# import schedule
 import time
 
 from shoot_row import shoot_row, csv2db
 
-schedule.every(2).seconds.do(shoot_row)
 def run_shoot_row():
-    while True:
-        schedule.run_pending()
+    csv2db()
+    while True :
+        time.sleep(0.05)
+        shoot_row()
+    
 
 
 # Create a Dash instance within the Flask app
@@ -83,7 +86,7 @@ dash_app.layout = html.Div([
     dcc.Location(id="url"),
     sidebar,
     content,
-    dcc.Interval(id='interval-component', interval=2*1000, n_intervals=0)  # 2초마다 갱신
+    dcc.Interval(id='interval-component', interval=6*1000, n_intervals=0)  # 100초마다 갱신
 ])
 
 @dash_app.callback(Output("page-content", "children"), [Input("url", "pathname"), Input('interval-component', 'n_intervals')])
@@ -100,7 +103,7 @@ def render_page_content(pathname, n_intervals):
             ])
         ])
     elif pathname == "/dashboard/page-1":
-        return html.P("페이지 1")
+        return churn_layout
     elif pathname == "/dashboard/page-2":
         return html.P("페이지 2")
     elif pathname == "/dashboard/page-3":
@@ -178,16 +181,15 @@ def update_output(n_clicks, input_value):
                             return dcc.Location(pathname="/dashboard/page-3", id="redirect-page-3")
                         elif category == "재구매 및 기존고객 관리":
                             return dcc.Location(pathname="/dashboard/page-4", id="redirect-page-4")
-                        elif category == "성과지표 (APPRU)":
+                        elif category == "성과지표 (ARPPU)":
                             return dcc.Location(pathname="/dashboard/page-5", id="redirect-page-5")
                         else:
                             return html.P("요구사항이 명확하지 않습니다. 원하시는 사안을 더 자세하게 말씀해주세요.")
     else:
         return html.P("무엇을 도와드릴까요?")
 if __name__ == "__main__":
-    # 스케줄러를 별도의 스레드에서 실행
     thread = threading.Thread(target=run_shoot_row)
     thread.start()
     
-    flask_app.run(port=8888, debug=True)
+    flask_app.run(port=8888, debug=False)
     # serve(app.server, host='0.0.0.0', port=8888)

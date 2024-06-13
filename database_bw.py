@@ -5,7 +5,7 @@
 
 
 import sqlite3
-import schedule
+# import schedule
 import time
 
 import pandas as pd
@@ -64,14 +64,11 @@ def shoot_row():
     train_conn.close()
     test_conn.close()
 
-# 2 + 1 초마다 shoot
 def main():
   csv2db()
-  schedule.every(2).seconds.do(shoot_row)
-
   while True:
-    schedule.run_pending()
-    time.sleep(1)
+    time.sleep(3)
+    shoot_row()
 
 
 if __name__ == "__main__":

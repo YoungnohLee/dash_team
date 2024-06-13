@@ -68,8 +68,7 @@ layout = html.Div(
         )
     ]
 )
-
-from app import app
+from app0 import dash_app as app
 
 @app.callback(
     [Output('arppu-graph', 'figure'),Output('apriori-results', 'children')],
