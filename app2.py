@@ -48,6 +48,13 @@ import bw_database
 # hi page
 import hi_database
 import hi_class
+# sy page
+from sklearn.manifold import TSNE
+import sy_database
+import sy_class
+
+import sy_class2
+
 
 # Code Starts
 
@@ -343,6 +350,154 @@ dh_layout = dmc.Container(
         )
     ]
 )
+
+
+dh_layout2 = dmc.Container(
+    fluid=True,
+    style={"padding": "20px"},
+    children=[
+        html.H1("고객 이탈률 예측", style={"textAlign": "center", "marginBottom": "20px"}),
+        dmc.Group(
+            spacing="lg",
+            grow=True,
+            style={"marginBottom": "20px"},
+            children=[
+                dmc.Paper(
+                    children=[
+                        html.P("전체 고객수", style={"fontWeight": "500"}),
+                        html.P(id="total_customers", style={"fontWeight": "700", "fontSize": "20px"})
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="xs",
+                    style={"textAlign": "center"},
+                ),
+                dmc.Paper(
+                    children=[
+                        html.P("이탈 위험 고객 수", style={"fontWeight": "500"}),
+                        html.P(id="churned_customers", style={"fontWeight": "700", "fontSize": "20px"})
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="xs",
+                    style={"textAlign": "center"},
+                ),
+                dmc.Paper(
+                    children=[
+                        html.P("이탈 위험 고객 비율", style={"fontWeight": "500"}),
+                        html.P(id="churned_ratio", style={"fontWeight": "700", "fontSize": "20px"})
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="xs",
+                    style={"textAlign": "center"},
+                )
+            ]
+        ),
+        dmc.SimpleGrid(
+            cols=4,
+            spacing="lg",
+            style={"marginBottom": "20px"},
+            children=[
+                dmc.Paper(
+                    children=[
+                        html.H2("고객 성별 분포", style={"textAlign": "center"}),
+                        dcc.Graph(id='gender_pie_chart')
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="lg",
+                    style={"padding": "20px"}
+                ),
+                dmc.Paper(
+                    children=[
+                        html.H2("고객 지역 분포", style={"textAlign": "center"}),
+                        dcc.Graph(id='location_pie_chart')
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="lg",
+                    style={"padding": "20px"}
+                ),
+                dmc.Paper(
+                    children=[
+                        html.H2("고객 별 평균 구매 금액", style={"textAlign": "center"}),
+                        dcc.Graph(id='purchase_amount_chart')
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="lg",
+                    style={"padding": "20px"}
+                ),
+                dmc.Paper(
+                    children=[
+                        html.H2("고객 별 선호 제품군", style={"textAlign": "center"}),
+                        dcc.Graph(id='category_chart')
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="lg",
+                    style={"padding": "20px"}
+                ),
+            ]
+        ),
+        dmc.SimpleGrid(
+            cols=2,
+            spacing="lg",
+            style={"marginBottom": "20px"},
+            children=[
+                dmc.Paper(
+                    children=[
+                        html.H2("지역 별 이탈 위험 고객 수", style={"textAlign": "center"}),
+                        dcc.Graph(id='mapbox_chart')
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="lg",
+                    style={"padding": "20px"}
+                ),
+                dmc.Paper(
+                    children=[
+                        html.H2("월 별 구매 고객 수", style={"textAlign": "center"}),
+                        dcc.Graph(id='month_chart')
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="lg",
+                    style={"padding": "20px"}
+                )
+            ]
+        ),
+        dmc.Paper(
+            style={"border": "1px solid #ddd", "marginBottom": "20px"},
+            shadow="sm",
+            p="lg",
+            mb="lg",
+            children=[
+                html.H2("90일 이후의 예측 이탈률 상위 고객 정보", style={"textAlign": "center"}),
+                dcc.Dropdown(
+                    id='row-dropdown',
+                    options=[
+                        {"label": "10명", "value": 10},
+                        {"label": "15명", "value": 15},
+                        {"label": "20명", "value": 20},
+                        {"label": "25명", "value": 25},
+                        {"label": "30명", "value": 30}
+                    ],
+                    value=10,
+                    clearable=False,
+                    style={'width': '50%', 'margin': 'auto', 'marginTop': '10px'}
+                ),
+                dmc.Table(
+                    id='customer-table',
+                    striped=True,
+                    highlightOnHover=True,
+                    style={'border': '1px solid #ccc', 'border-collapse': 'collapse'}  # 스타일을 사용하여 테두리 추가
+                )
+            ]
+        )
+    ]
+)
 ## bw layout
 
 PLOTLY_LOGO = "https://images.plot.ly/logo/new-branding/plotly-logomark.png"
@@ -443,6 +598,8 @@ def donut_chart2():
     fig.update_yaxes(title="", showticklabels=False)
     fig.data[0]["hovertemplate"] = fig.data[0]["hovertemplate"][:-14]
     return fig
+
+
 
 CLUSTER1 = dbc.Card(
     [
@@ -767,6 +924,323 @@ hi_layout = html.Div(
     ]
 )
 
+hi_layout2 = html.Div(
+    style={'overflow-x': 'hidden'},
+    children=[
+        html.Div(
+            style={'textAlign': 'center', 'padding': '20px'},
+            children=[
+                html.H1('Marketing Cost Prediction Dashboard', style={'font-family': 'IntegralCF-ExtraBold', 'color': 'slategray'}),
+                dcc.Tabs(id='tabs', value='overall', children=[
+                    dcc.Tab(label='Overall Data', value='overall'),
+                    dcc.Tab(label='VIP 고객', value='cluster-0'),
+                    dcc.Tab(label='관심 고객', value='cluster-1'),
+                    dcc.Tab(label='우수 고객', value='cluster-2'),
+                    dcc.Tab(label='이탈 고객', value='cluster-3'),
+                    dcc.Tab(label='잠재 고객', value='cluster-4'),
+                ]),
+                dcc.Graph(id='marketing-cost-graph')
+            ]
+        )
+    ]
+)
+
+## sy layout
+def heatmap():
+    train_df = bw_database.making_dataframe_train_db('train_table')
+    train = bw_database.making_dataframe_train_db('train_table')
+    sy = bw_class.bw_preprocessing(train)
+    sy.apply_my_function()
+    sy_df = sy.return_dataframe()
+    processor = bw_class.RFMProcessor(train)
+    rfm_without_outliers, rfm_outliers, rfm_without_outliers_log, X_scaled = processor.process_data()
+    processor = bw_class.RFMProcessor(train) 
+    rfm_without_outliers, rfm_outliers, rfm_without_outliers_log, X_scaled = processor.process_data()
+    processor.fit_clustering(X_scaled, n_clusters=4)
+    new_data_predictions = processor.predict(train)
+    cluster_data = bw_class.mapping_cluster(new_data_predictions)
+    cluster = cluster_data[['고객ID','Recency','Frequency','Monetary','고객분류']]
+    train_sy = sy_df.merge(cluster, on = '고객ID', how = 'left')
+    cohort_analysis = sy_class.CohortAnalysis(train_sy)
+    cohort = cohort_analysis.calculate_cohort()
+    retention_matrix = cohort_analysis.calculate_retention_rate(cohort)
+     
+    fig = go.Figure(data=go.Heatmap(
+        z=retention_matrix.values,
+        x=retention_matrix.columns,
+        y=retention_matrix.index,
+        colorscale='Blues',
+        text=retention_matrix.values,
+        texttemplate="%{text:.2%}",  # 비율 형식으로 표시
+        textfont={"size": 10, "color": "black"}
+    ))
+    
+    # 레이아웃 업데이트
+    fig.update_layout(
+        title='코호트 분석 - Retention Rates',
+        title_font_size=20,
+        xaxis_title='Months After First Purchase',
+        yaxis_title='Cohort Group',
+        xaxis=dict(tickmode='linear', tick0=0, dtick=1, tickfont=dict(size=12)),
+        yaxis=dict(tickfont=dict(size=12)),
+        plot_bgcolor='white',
+        margin=dict(l=60, r=20, t=50, b=50),
+        width=800,
+        height=600
+    )
+    
+    # 축 레이블 및 타이틀 스타일링
+    fig.update_xaxes(
+        title_font=dict(size=14),
+        tickfont=dict(size=12)
+    )
+    
+    fig.update_yaxes(
+        title_font=dict(size=14),
+        tickfont=dict(size=12)
+    )
+    
+    # 색상바(컬러바) 스타일링
+    fig.update_coloraxes(colorbar=dict(
+        title="재구매율",
+        titleside="right",
+        titlefont=dict(size=14),
+        tickfont=dict(size=12)
+    ))
+    return fig
+
+def barplot1():
+    train_df = bw_database.making_dataframe_train_db('train_table')
+    train = bw_database.making_dataframe_train_db('train_table')
+    sy = bw_class.bw_preprocessing(train)
+    sy.apply_my_function()
+    sy_df = sy.return_dataframe()
+    processor = bw_class.RFMProcessor(train)
+    rfm_without_outliers, rfm_outliers, rfm_without_outliers_log, X_scaled = processor.process_data()
+    processor = bw_class.RFMProcessor(train) 
+    rfm_without_outliers, rfm_outliers, rfm_without_outliers_log, X_scaled = processor.process_data()
+    processor.fit_clustering(X_scaled, n_clusters=4)
+    new_data_predictions = processor.predict(train)
+    cluster_data = bw_class.mapping_cluster(new_data_predictions)
+    cluster = cluster_data[['고객ID','Recency','Frequency','Monetary','고객분류']]
+    train_sy = sy_df.merge(cluster, on = '고객ID', how = 'left')
+    CategoryAnalysis = sy_class.CustomerCategoryAnalysis(train_sy)
+    CategoryAnalysis.calculate_repurchase_periods()
+    category = CategoryAnalysis.create_category_dataframe()
+
+    # 기본 바 차트 생성
+    fig = px.bar(category, 
+                 x='평균 재구매 주기(일)',
+                 y='제품카테고리', 
+                 title='카테고리별 평균 재구매 주기(일)',
+                 orientation='h',
+                 color='제품카테고리',  # 카테고리에 따라 색상 지정
+                 text='평균 재구매 주기(일)')  # 막대에 텍스트 라벨 추가
+    
+    # 차트 레이아웃 꾸미기
+    fig.update_layout(
+        title={
+            'text': "카테고리별 평균 재구매 주기(일)",
+            'y':0.9,
+            'x':0.3,
+            'xanchor': 'center',
+            'yanchor': 'top'
+        },
+        xaxis_title="평균 재구매 주기(일)",
+        yaxis_title="제품카테고리",
+        legend_title="제품카테고리",
+        font=dict(
+            family="Courier New, monospace",
+            size=12,
+            color="RebeccaPurple"
+        ),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+    )
+    
+    # 막대 색상 꾸미기
+    fig.update_traces(
+        marker=dict(line=dict(color='#000000', width=1)),
+        texttemplate='%{text:.2f}', textposition='outside'
+    )
+    
+    return fig
+
+def barplot2():
+    train_df = bw_database.making_dataframe_train_db('train_table')
+    train = bw_database.making_dataframe_train_db('train_table')
+    sy = bw_class.bw_preprocessing(train)
+    sy.apply_my_function()
+    sy_df = sy.return_dataframe()
+    processor = bw_class.RFMProcessor(train)
+    rfm_without_outliers, rfm_outliers, rfm_without_outliers_log, X_scaled = processor.process_data()
+    processor = bw_class.RFMProcessor(train) 
+    rfm_without_outliers, rfm_outliers, rfm_without_outliers_log, X_scaled = processor.process_data()
+    processor.fit_clustering(X_scaled, n_clusters=4)
+    new_data_predictions = processor.predict(train)
+    cluster_data = bw_class.mapping_cluster(new_data_predictions)
+    cluster = cluster_data[['고객ID','Recency','Frequency','Monetary','고객분류']]
+    train_sy = sy_df.merge(cluster, on = '고객ID', how = 'left')
+    CategoryAnalysis = sy_class.CustomerCategoryAnalysis(train_sy)
+    CategoryAnalysis.calculate_repurchase_periods()
+    category = CategoryAnalysis.create_category_dataframe()
+    
+    # 기본 바 차트 생성
+    fig = px.bar(category, 
+                 x='재구매율',
+                 y='제품카테고리',  
+                 title='재구매율',
+                 color='제품카테고리',  # 카테고리에 따라 색상 지정
+                 orientation='h',
+                 text='재구매율')  # 막대에 텍스트 라벨 추가
+    
+    # 차트 레이아웃 꾸미기
+    fig.update_layout(
+        title={
+            'text': "재구매율",
+            'y':0.9,
+            'x':0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'
+        },
+        xaxis_title="재구매율",
+        yaxis_title="제품카테고리",
+        legend_title="제품카테고리",
+        font=dict(
+            family="Courier New, monospace",
+            size=12,
+            color="RebeccaPurple"
+        ),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+    )
+    
+    # 막대 색상 꾸미기
+    fig.update_traces(
+        marker=dict(line=dict(color='#000000', width=1)),
+        texttemplate='%{text:.2f}', textposition='outside'
+    )
+    
+    return fig
+
+NAVBAR2 = dbc.Navbar(
+    children=[
+        html.A(
+            # Use row and col to control vertical alignment of logo / brand
+            dbc.Row(
+                [
+                    dbc.Col(html.Img(src=PLOTLY_LOGO, height="30px")),
+                    dbc.Col(
+                        dbc.NavbarBrand("고객 재구매율 확인", className="ml-2")
+                    ),
+                ],
+                align="center",
+            ),
+            href="https://plot.ly",
+        )
+    ],
+    color="dark",
+    dark=True,
+    sticky="top",
+)
+
+CLUSTER12 = dbc.Card(
+    [
+        dbc.CardHeader(html.H5("재구매주기")),
+        dbc.CardBody(
+            [
+                dcc.Loading(
+                    id="loading-cluster-comps12",
+                    children=[
+                        dbc.Alert(
+                            "Something's gone wrong! Give us a moment, but try loading this page again if problem persists.",
+                            id="cluster-alert",  # ID 변경
+                            color="warning",
+                            style={"display": "none"},
+                        ),
+                        dcc.Graph(id="cluster-comps12"),   
+                    ],
+                    type="default",
+                )
+            ],
+            style={"marginTop": 0, "marginBottom": 0},
+        ),
+    ]
+)
+
+CLUSTER22 = dbc.Card(
+    [
+        dbc.CardHeader(html.H5("재구매율")),
+        dbc.CardBody(
+            [
+                dcc.Loading(
+                    id="loading-cluster-comps22",
+                    children=[
+                        dbc.Alert(
+                            "Something's gone wrong! Give us a moment, but try loading this page again if problem persists.",
+                            id="cluster-alert",  # ID 변경
+                            color="warning",
+                            style={"display": "none"},
+                        ),
+                        dcc.Graph(id="cluster-comps22"),  
+                    ],
+                    type="default",
+                )
+            ],
+            style={"marginTop": 0, "marginBottom": 0},
+        ),
+    ]
+)
+
+CLUSTER32 = dbc.Card(
+    [
+        dbc.CardHeader(html.H5("코호트 분석")),
+        dbc.CardBody(
+            [
+                dcc.Loading(
+                    id="loading-cluster-comps3",
+                    children=[
+                        dbc.Alert(
+                            "Something's gone wrong! Give us a moment, but try loading this page again if problem persists.",
+                            id="cluster-alert",  # ID 변경
+                            color="warning",
+                            style={"display": "none"},
+                        ),
+                        dcc.Graph(id="cluster-comps3"),  
+                    ],
+                    type="default",
+                )
+            ],
+            style={"marginTop": 0, "marginBottom": 0},
+        ),
+    ]
+)
+
+BODY2 = dbc.Container(
+    [
+        dbc.Row(
+            [   
+                dbc.Col(CLUSTER12, align="center"),
+                dbc.Col(CLUSTER22, align="center")
+            
+            ],
+            
+            style={"marginTop": 30}
+        ),
+        dbc.Row(
+            [   
+                dbc.Col(CLUSTER32, align="center"),
+            
+            ],
+            
+            style={"marginTop": 30}
+        ),
+        
+    ],
+    className="mt-12",
+)
+sy_layout = html.Div(children=[NAVBAR2, BODY2])
+
 
 @dash_app.callback(
     Output("page-content", "children"), 
@@ -787,7 +1261,7 @@ def render_page_content(pathname, n_intervals):
     elif pathname == "/dashboard/page-1":
         return html.Div([
             dcc.Location(pathname="/dashboard/page-1", id="redirect-page-1"),
-            dh_layout
+            dh_layout2
         ])
     elif pathname == "/dashboard/page-2":
         return html.Div([
@@ -797,12 +1271,12 @@ def render_page_content(pathname, n_intervals):
     elif pathname == "/dashboard/page-3":
         return html.Div([
             dcc.Location(pathname="/dashboard/page-3", id="redirect-page-3"),
-            hi_layout
+            hi_layout2
         ])
     elif pathname == "/dashboard/page-4":
         return html.Div([
             dcc.Location(pathname="/dashboard/page-4", id="redirect-page-4"),
-            html.P("소영 파트")
+            sy_layout
         ])
     elif pathname == "/dashboard/page-5":
         return html.Div([
@@ -822,7 +1296,7 @@ def render_page_content(pathname, n_intervals):
 #             ])
 #         ])
 #     elif pathname == "/dashboard/page-1":
-#         return dh_layout 
+#         return dh_layout2
 #     elif pathname == "/dashboard/page-2":
 #         return html.P("페이지 2")
 #     elif pathname == "/dashboard/page-3":
@@ -1263,17 +1737,16 @@ def update_treemap(customer_type):
     return fig
 
 ## hi callback
-
 @dash_app.callback(
     Output('marketing-cost-graph', 'figure'),
     Input('tabs', 'value')
 )
-def update_graph(tab_value):
+def update_graph(selected_tab):
     # Load data and perform RFM clustering
     df = hi_database.db_to_df(db_name="TRAIN.DB", table_name="train_table")
     processor = bw_class.RFMProcessor(df)
     rfm_without_outliers, rfm_outliers, rfm_without_outliers_log, X_scaled = processor.process_data()
-    processor.fit_clustering(X_scaled, n_clusters=5)
+    processor.fit_clustering(X_scaled, n_clusters=4)
     new_data_predictions = processor.predict(df)
 
     cluster_data = bw_class.mapping_cluster(new_data_predictions)
@@ -1289,16 +1762,93 @@ def update_graph(tab_value):
     hi_pipeline.fit(train0)
     predictions = hi_pipeline.predict(test0)
 
-    # Visualizer
-    visualizer = hi_class.hi_visualizer(data=train0, clusters=predictions)
+    visualizer = hi_class.hi_visualizer(train0, predictions)
 
-    if tab_value == "overall":
-        figure = visualizer.visualize_overall()
+#    if selected_tab == "overall":
+#        figure = visualizer.visualize_overall()
+#    else:
+#        cluster_number = int(selected_tab.split('-')[-1])
+#        figure = visualizer.visualize_cluster(cluster_number)
+
+#    return figure
+
+    if selected_tab == "overall":
+            graph_figure = visualizer.visualize_overall()
+    elif selected_tab == 'cluster-0':
+            graph_figure = visualizer.visualize_cluster(0)
+    elif selected_tab == 'cluster-1':
+            graph_figure = visualizer.visualize_cluster(1)
+    elif selected_tab == 'cluster-2':
+            graph_figure = visualizer.visualize_cluster(2)
+    elif selected_tab == 'cluster-3':
+            graph_figure = visualizer.visualize_cluster(3)
+    elif selected_tab == 'cluster-4':
+            graph_figure = visualizer.visualize_cluster(4)
     else:
-        cluster_number = int(tab_value.split('-')[-1])
-        figure = visualizer.visualize_cluster(cluster_number)
+            graph_figure = go.Figure()
 
-    return figure
+    return graph_figure
+
+# @dash_app.callback(
+#     Output('marketing-cost-graph', 'figure'),
+#     Input('tabs', 'value')
+# )
+# def update_graph(tab_value):
+#     # Load data and perform RFM clustering
+#     df = hi_database.db_to_df(db_name="TRAIN.DB", table_name="train_table")
+#     processor = bw_class.RFMProcessor(df)
+#     rfm_without_outliers, rfm_outliers, rfm_without_outliers_log, X_scaled = processor.process_data()
+#     processor.fit_clustering(X_scaled, n_clusters=4)
+#     new_data_predictions = processor.predict(df)
+
+#     cluster_data = bw_class.mapping_cluster(new_data_predictions)
+#     cluster = cluster_data[['고객ID','Recency','Frequency','Monetary','고객분류']]
+#     train_hi = df.merge(cluster, on='고객ID', how='left')
+
+#     # Auto ARIMA processing
+#     hi_pipeline = hi_class.AutoArimaPipeline()
+#     df_arima = hi_pipeline.hi_preprocessing(train_hi)
+#     out = hi_pipeline.split_data_by_cluster(df_arima)
+#     train0, test0 = hi_pipeline.create_train_test_by_cluster(train_hi, out)
+
+#     hi_pipeline.fit(train0)
+#     predictions = hi_pipeline.predict(test0)
+
+#     # Visualizer
+#     visualizer = hi_class.hi_visualizer(data=train0, clusters=predictions)
+
+#     if tab_value == "overall":
+#         figure = visualizer.visualize_overall()
+#     else:
+#         cluster_number = int(tab_value.split('-')[-1])
+#         figure = visualizer.visualize_cluster(cluster_number)
+
+#     return figure
+
+## sy callback
+
+@dash_app.callback(
+    Output('cluster-comps12', 'figure'),
+    Input('cluster-comps12', 'id')
+)
+def update_cluster_comps12(_):
+    return barplot1()
+
+@dash_app.callback(
+    Output('cluster-comps22', 'figure'),
+    Input('cluster-comps22', 'id')
+)
+
+def update_cluster_comps22(_):
+    return barplot2()
+
+@dash_app.callback(
+    Output('cluster-comps3', 'figure'),
+    Input('cluster-comps3', 'id')
+)
+
+def update_cluster_comps33(_):
+    return heatmap()
 
 if __name__ == "__main__":
     thread = threading.Thread(target=run_shoot_row)

@@ -77,14 +77,26 @@ def print_table(db_name, table_name):
 
 
 # db에서 데이터 df로 불러오기
+# def db_to_df(db_name, table_name):
+#     con = sqlite3.connect(db_name)
+#     cur = con.cursor()
+#     query = cur.execute( "SELECT * From " + table_name  )
+#     cols = [column[0] for column in query.description]
+#     result = pd.DataFrame.from_records(data=query.fetchall(), columns=cols)
+#     con.close()
+#     return result
+### 수정된 부분 (영노)
 def db_to_df(db_name, table_name):
-    con = sqlite3.connect(db_name)
-    cur = con.cursor()
-    query = cur.execute( "SELECT * From " + table_name  )
-    cols = [column[0] for column in query.description]
-    result = pd.DataFrame.from_records(data=query.fetchall(), columns=cols)
+    con = sqlite3.connect(f"{db_name}")
+    cursor = con.cursor()
+
+    cursor.execute(f"SELECT rowid, * from {table_name}")
+    cols = [column[0] for column in cursor.description]
+    dat = pd.DataFrame.from_records(data = cursor.fetchall(), columns=cols)
+    
+    con.commit()
     con.close()
-    return result
+    return dat
 
 # df를 db로 저장
 def df_to_db(df, db_name, table_name):

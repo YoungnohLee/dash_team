@@ -5,162 +5,157 @@ import dash_mantine_components as dmc
 import pandas as pd
 import pickle as pkl
 import dh_class as dc
-import database_bw as db
+import database_bw 
 
-layout = dmc.MantineProvider(
+dh_layout = dmc.Container(
+    fluid=True,
+    style={"padding": "20px"},
     children=[
-        dmc.Container(
-            fluid=True,
-            style={"padding": "20px"},
+        html.H1("고객 이탈률 예측", style={"textAlign": "center", "marginBottom": "20px"}),
+        dmc.Group(
+            spacing="lg",
+            grow=True,
+            style={"marginBottom": "20px"},
             children=[
-                html.H1("고객 이탈률 예측", style={"textAlign": "center"}),
-                dmc.Group(
-                    gap="lg",
-                    grow=True,
-                    style={"marginBottom": "20px"},
+                dmc.Paper(
                     children=[
-                        dmc.Paper(
-                            children=[
-                                html.P("전체 고객수", style={"fontWeight": "500"}),
-                                html.P(id="total_customers", style={"fontWeight": "700", "fontSize": "20px"})
-                            ],
-                            withBorder=True,
-                            shadow="sm",
-                            p="xs",
-                            style={"textAlign": "center"},
-                        ),
-                        dmc.Paper(
-                            children=[
-                                html.P("이탈 위험 고객 수", style={"fontWeight": "500"}),
-                                html.P(id="churned_customers", style={"fontWeight": "700", "fontSize": "20px"})
-                            ],
-                            withBorder=True,
-                            shadow="sm",
-                            p="xs",
-                            style={"textAlign": "center"},
-                        ),
-                        dmc.Paper(
-                            children=[
-                                html.P("이탈 위험 고객 비율", style={"fontWeight": "500"}),
-                                html.P(id="churned_ratio", style={"fontWeight": "700", "fontSize": "20px"})
-                            ],
-                            withBorder=True,
-                            shadow="sm",
-                            p="xs",
-                            style={"textAlign": "center"},
-                        )
-                    ]
-                ),
-                dmc.SimpleGrid(
-                    cols=4,
-                    spacing="lg",
-                    mb="lg",
-                    children=[
-                        dmc.Paper(
-                            children=[
-                                html.H2("고객 성별 분포", style={"textAlign": "center"}),
-                                dcc.Graph(id='gender_pie_chart')
-                            ],
-                            withBorder=True,
-                            shadow="sm",
-                            p="lg",
-                            style={"padding": "20px"}
-                        ),
-                        dmc.Paper(
-                            children=[
-                                html.H2("고객 지역 분포", style={"textAlign": "center"}),
-                                dcc.Graph(id='location_pie_chart')
-                            ],
-                            withBorder=True,
-                            shadow="sm",
-                            p="lg",
-                            style={"padding": "20px"}
-                        ),
-                        dmc.Paper(
-                            children=[
-                                html.H2("고객 별 평균 구매 금액", style={"textAlign": "center"}),
-                                dcc.Graph(id='purchase_amount_chart')
-                            ],
-                            withBorder=True,
-                            shadow="sm",
-                            p="lg",
-                            style={"padding": "20px"}
-                        ),
-                        dmc.Paper(
-                            children=[
-                                html.H2("고객 별 선호 제품군", style={"textAlign": "center"}),
-                                dcc.Graph(id='category_chart')
-                            ],
-                            withBorder=True,
-                            shadow="sm",
-                            p="lg",
-                            style={"padding": "20px"}
-                        ),
-                    ]
-                ),
-                dmc.SimpleGrid(
-                    cols=2,
-                    spacing="lg",
-                    mb="lg",
-                    children=[
-                        dmc.Paper(
-                            children=[
-                                html.H2("지역 별 이탈 위험 고객 수", style={"textAlign": "center"}),
-                                dcc.Graph(id='mapbox_chart')
-                            ],
-                            withBorder=True,
-                            shadow="sm",
-                            p="lg",
-                            style={"padding": "20px"}
-                        ),
-                        dmc.Paper(
-                            children=[
-                                html.H2("월 별 구매 고객 수", style={"textAlign": "center"}),
-                                dcc.Graph(id='month_chart')
-                            ],
-                            withBorder=True,
-                            shadow="sm",
-                            p="lg",
-                            style={"padding": "20px"}
-                        )
-                    ]
+                        html.P("전체 고객수", style={"fontWeight": "500"}),
+                        html.P(id="total_customers", style={"fontWeight": "700", "fontSize": "20px"})
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="xs",
+                    style={"textAlign": "center"},
                 ),
                 dmc.Paper(
+                    children=[
+                        html.P("이탈 위험 고객 수", style={"fontWeight": "500"}),
+                        html.P(id="churned_customers", style={"fontWeight": "700", "fontSize": "20px"})
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="xs",
+                    style={"textAlign": "center"},
+                ),
+                dmc.Paper(
+                    children=[
+                        html.P("이탈 위험 고객 비율", style={"fontWeight": "500"}),
+                        html.P(id="churned_ratio", style={"fontWeight": "700", "fontSize": "20px"})
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="xs",
+                    style={"textAlign": "center"},
+                )
+            ]
+        ),
+        dmc.SimpleGrid(
+            cols=4,
+            spacing="lg",
+            style={"marginBottom": "20px"},
+            children=[
+                dmc.Paper(
+                    children=[
+                        html.H2("고객 성별 분포", style={"textAlign": "center"}),
+                        dcc.Graph(id='gender_pie_chart')
+                    ],
                     withBorder=True,
                     shadow="sm",
                     p="lg",
-                    mb="lg",
+                    style={"padding": "20px"}
+                ),
+                dmc.Paper(
                     children=[
-                        html.H2("90일 이후의 예측 이탈률 상위 고객 정보", style={"textAlign": "center"}),
-                        dcc.Dropdown(
-                            id='row-dropdown',
-                            options=[
-                                {"label": "10명", "value": 10},
-                                {"label": "15명", "value": 15},
-                                {"label": "20명", "value": 20},
-                                {"label": "25명", "value": 25},
-                                {"label": "30명", "value": 30}
-                            ],
-                            value=10,
-                            clearable=False,
-                            style={'width': '50%', 'margin': 'auto', 'marginTop': '10px'}
-                        ),
-                        dmc.Table(
-                            id='customer-table',
-                            data={"head": [], "body": []},
-                            striped=True,
-                            highlightOnHover=True,
-                            withTableBorder=True,
-                            withColumnBorders=True
-                        )
-                    ]
+                        html.H2("고객 지역 분포", style={"textAlign": "center"}),
+                        dcc.Graph(id='location_pie_chart')
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="lg",
+                    style={"padding": "20px"}
+                ),
+                dmc.Paper(
+                    children=[
+                        html.H2("고객 별 평균 구매 금액", style={"textAlign": "center"}),
+                        dcc.Graph(id='purchase_amount_chart')
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="lg",
+                    style={"padding": "20px"}
+                ),
+                dmc.Paper(
+                    children=[
+                        html.H2("고객 별 선호 제품군", style={"textAlign": "center"}),
+                        dcc.Graph(id='category_chart')
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="lg",
+                    style={"padding": "20px"}
+                ),
+            ]
+        ),
+        dmc.SimpleGrid(
+            cols=2,
+            spacing="lg",
+            style={"marginBottom": "20px"},
+            children=[
+                dmc.Paper(
+                    children=[
+                        html.H2("지역 별 이탈 위험 고객 수", style={"textAlign": "center"}),
+                        dcc.Graph(id='mapbox_chart')
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="lg",
+                    style={"padding": "20px"}
+                ),
+                dmc.Paper(
+                    children=[
+                        html.H2("월 별 구매 고객 수", style={"textAlign": "center"}),
+                        dcc.Graph(id='month_chart')
+                    ],
+                    withBorder=True,
+                    shadow="sm",
+                    p="lg",
+                    style={"padding": "20px"}
+                )
+            ]
+        ),
+        dmc.Paper(
+            style={"border": "1px solid #ddd", "marginBottom": "20px"},
+            shadow="sm",
+            p="lg",
+            mb="lg",
+            children=[
+                html.H2("90일 이후의 예측 이탈률 상위 고객 정보", style={"textAlign": "center"}),
+                dcc.Dropdown(
+                    id='row-dropdown',
+                    options=[
+                        {"label": "10명", "value": 10},
+                        {"label": "15명", "value": 15},
+                        {"label": "20명", "value": 20},
+                        {"label": "25명", "value": 25},
+                        {"label": "30명", "value": 30}
+                    ],
+                    value=10,
+                    clearable=False,
+                    style={'width': '50%', 'margin': 'auto', 'marginTop': '10px'}
+                ),
+                dmc.Table(
+                    id='customer-table',
+                    striped=True,
+                    highlightOnHover=True,
+                    withBorder=True,
+                    withColumnBorders=True
                 )
             ]
         )
     ]
 )
-from app import app
-@app.callback(
+
+@dash_app.callback(
     [Output('total_customers', 'children'),
      Output('churned_customers', 'children'),
      Output('churned_ratio', 'children'),
@@ -170,12 +165,12 @@ from app import app
      Output('purchase_amount_chart', 'figure'),
      Output('category_chart', 'figure'),
      Output('month_chart', 'figure'),
-     Output('customer-table', 'data')],
+     Output('customer-table', 'children')],
     [Input('row-dropdown', 'value')]
 )
 def update_dashboard(num_rows):
 
-    new_df = db.making_dataframe_train_db("train_table")
+    new_df = database_bw.making_dataframe_train_db("train_table")
     
     prep = dc.dh_preprocessing(new_df)
     prep.apply_my_function()
@@ -202,6 +197,9 @@ def update_dashboard(num_rows):
     category_chart = viz.plot_category()
     month_chart = viz.plot_month()
 
-    table_data = {"head": display_df.columns.tolist(), "body": display_df.values.tolist()}
+    table_header = [html.Thead(html.Tr([html.Th(col) for col in display_df.columns]))]
+    table_body = [html.Tbody([html.Tr([html.Td(cell) for cell in row]) for row in display_df.values])]
 
-    return total_customers, churned_customers, churned_ratio, gender_pie_chart, location_pie_chart, mapbox_chart, purchase_amount_chart, category_chart, month_chart, table_data
+    table_children = table_header + table_body
+
+    return total_customers, churned_customers, churned_ratio, gender_pie_chart, location_pie_chart, mapbox_chart, purchase_amount_chart, category_chart, month_chart, table_children
